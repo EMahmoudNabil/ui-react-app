@@ -100,7 +100,7 @@ You can update the base URL in `src/api/axios.ts` if needed.
 
 * Name: Mahmoud Nabil Rashad
 * Email: [e.mahmoudnabil@gmail.com](mailto:e.mahmoudnabil@gmail.com)
-* LinkedIn: [linkedin.com/in/mahmoud-nabil](https://www.linkedin.com/in/mahmoud-nabil)
+* LinkedIn: [Mahmooud Nabil]([https://www.linkedin.com/in/mahmoud-nabil](https://www.linkedin.com/in/emahmoudnabil/))
 
 ---
 
