@@ -18,7 +18,7 @@ export default function ProductComponentPage() {
         selectedProduct={selectedProduct}
         onSelect={(product) => {
           setSelectedProduct(product);
-          setSelectedComponentId(null); // تصفير المكون عند تغيير المنتج
+          setSelectedComponentId(null); 
         }}
       />
 
@@ -29,7 +29,7 @@ export default function ProductComponentPage() {
             product={selectedProduct}
             selectedComponentId={selectedComponentId}
             onSelectComponent={(id) => {
-            setSelectedComponentId(id); // ✅ يتم ضبط الـ component المحدد
+            setSelectedComponentId(id); 
             }}
         />
         ) : (

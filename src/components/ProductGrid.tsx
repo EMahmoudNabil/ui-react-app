@@ -102,7 +102,7 @@ export default function ProductGrid({ selectedProduct, onSelect }: Props) {
   const handleDelete = (id: number) => {
     mutationDelete.mutate(id);
     if (selectedProduct?.id === id) {
-      onSelect(null); // إزالة التحديد إذا تم حذف المنتج المحدد
+      onSelect(null); 
     }
   };
   return (

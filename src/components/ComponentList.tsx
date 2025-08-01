@@ -180,7 +180,6 @@ export default function ComponentGrid({ product }: Props) {
                   </TableCell>
                 </TableRow>
 
-                {/* الصف الإضافي لعرض SubcomponentGrid */}
                 {row.id > 0 && (
                   <TableRow>
                     <TableCell colSpan={4} sx={{ p: 0 }}>

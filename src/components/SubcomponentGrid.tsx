@@ -66,10 +66,9 @@ export default function SubcomponentGrid({ componentId, componentQuantity }: Pro
   const { data, error: queryError } = useQuery({
     queryKey: ["subcomponents", componentId],
     queryFn: () => getSubcomponentsByComponentId(componentId),
-    enabled: !!componentId, // هذا مهم جدًا
+    enabled: !!componentId, 
   });
 
- // عند تحميل الداتا
 useEffect(() => {
   if (data) {
     try {
@@ -87,7 +86,6 @@ useEffect(() => {
   }
 }, [data, componentQuantity]);
 
-// عند تغير كمية الـ Component
 useEffect(() => {
   setRows((prevRows) =>
     prevRows.map((row) => ({
@@ -193,22 +191,20 @@ const handleBlur = async (row: Subcomponent, index: number) => {
 
   try {
     if (row.id > 0) {
-      // تحديث مكون موجود
       await mutationUpdate.mutateAsync(mapToDto(row));
     } else {
-      // إنشاء مكون جديد
       const { id, ...createDto } = mapToDto(row);
       const result = await mutationCreate.mutateAsync(createDto);
 
-      // تحديث الـ state باستخدام الفهرس بدل المقارنة بين الكائنات
+     
       setRows(prev => {
         const updated = [...prev];
-        updated[index] = sanitizeSubcomponent(result); // تأكد أن الدالة ترجع كائن متكامل
+        updated[index] = sanitizeSubcomponent(result); 
         return updated;
       });
     }
 
-    setError(null); // إزالة رسالة الخطأ بعد النجاح
+    setError(null); 
   } catch (error) {
     console.error("Error saving subcomponent:", error);
     setError("فشل حفظ البيانات. يرجى المحاولة مرة أخرى");

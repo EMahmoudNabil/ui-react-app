@@ -6,7 +6,7 @@ import { Product } from "../types/Product";
 
 export default function ProductComponentPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [selectedComponentId, setSelectedComponentId] = useState<number | null>(null); // ✅
+  const [selectedComponentId, setSelectedComponentId] = useState<number | null>(null); 
 
   return (
     <Box p={3} dir="rtl">
@@ -19,18 +19,17 @@ export default function ProductComponentPage() {
         selectedProduct={selectedProduct}
         onSelect={(product) => {
           setSelectedProduct(product);
-          setSelectedComponentId(null); // ✅ تصفير المكون عند تغيير المنتج
+          setSelectedComponentId(null); 
         }}
       />
 
       <Divider sx={{ my: 3 }} />
 
-      {/* جدول المكونات الخاصة بالمنتج المحدد */}
       {selectedProduct ? (
         <ComponentGrid
           product={selectedProduct}
-          selectedComponentId={selectedComponentId} // ✅ تمرير القيمة
-          onSelectComponent={setSelectedComponentId} // ✅ تمرير الدالة الحقيقية
+          selectedComponentId={selectedComponentId}  
+          onSelectComponent={setSelectedComponentId} 
         />
       ) : (
         <Typography color="text.secondary" mt={2}>
