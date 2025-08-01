@@ -4,6 +4,10 @@ This is the frontend for a product management application built with **React**, 
 
 ---
 
+🚀  Project Demo (https://youtu.be/HNxPPtqzXnQ)
+
+📋  Back End file (https://github.com/EMahmoudNabil/Furniture-Factory-Management-System)
+
 ## 🚀 Features
 
 * ✅ Add, update, and select products
@@ -88,6 +92,20 @@ http://localhost:7022/api
 You can update the base URL in `src/api/axios.ts` if needed.
 
 ---
+## 📸 Screenshots
+
+### Architecture Front End  
+![Architecture Front End](<img width="241" height="597" alt="image" src="https://github.com/user-attachments/assets/06252665-932f-41c3-9db2-c64ae9ceaef2" />
+)
+
+### Product Page
+![Product Page](<img width="1355" height="615" alt="22" src="https://github.com/user-attachments/assets/a7966f4d-2f03-43f0-8619-5242fdd4cf53" />
+)
+
+)
+### Responsive Design
+![Responsive Design ](<img width="518" height="694" alt="33" src="https://github.com/user-attachments/assets/60a1f194-ed21-4efc-b023-13a9cccadc4d" />
+)
 
 ## 📮 Notes
 
@@ -100,7 +118,7 @@ You can update the base URL in `src/api/axios.ts` if needed.
 
 * Name: Mahmoud Nabil Rashad
 * Email: [e.mahmoudnabil@gmail.com](mailto:e.mahmoudnabil@gmail.com)
-* LinkedIn: [Mahmooud Nabil]([https://www.linkedin.com/in/mahmoud-nabil](https://www.linkedin.com/in/emahmoudnabil/))
+* LinkedIn: [Mahmoud Nabil]([https://www.linkedin.com/in/mahmoud-nabil](https://www.linkedin.com/in/emahmoudnabil/))
 
 ---
 
