@@ -30,28 +30,33 @@ type Props = {
 
 // Utility function to sanitize subcomponent data
 const sanitizeSubcomponent = (item: any): Subcomponent => ({
-  ...item,
-  detailSize: {
-    length: item.detailSize?.length || 0,
-    width: item.detailSize?.width || 0,
-    thickness: item.detailSize?.thickness || 0,
-  },
-  cuttingSize: {
-    length: item.cuttingSize?.length || 0,
-    width: item.cuttingSize?.width || 0,
-    thickness: item.cuttingSize?.thickness || 0,
-  },
-  finalSize: {
-    length: item.finalSize?.length || 0,
-    width: item.finalSize?.width || 0,
-    thickness: item.finalSize?.thickness || 0,
-  },
-  count: item.count || 0,
-  totalQuantity: item.totalQuantity || 0,
+  id: item.id,
+  name: item.name,
+  material: item.material,
+  count: item.count,
+  totalQuantity: item.totalQuantity,
   notes: item.notes || "",
   veneerInner: item.veneerInner || "",
   veneerOuter: item.veneerOuter || "",
+  componentId: item.componentId,
+
+  detailSize: {
+    length: item.detailLength || 0,
+    width: item.detailWidth || 0,
+    thickness: item.detailThickness || 0,
+  },
+  cuttingSize: {
+    length: item.cuttingLength || 0,
+    width: item.cuttingWidth || 0,
+    thickness: item.cuttingThickness || 0,
+  },
+  finalSize: {
+    length: item.finalLength || 0,
+    width: item.finalWidth || 0,
+    thickness: item.finalThickness || 0,
+  },
 });
+
 
 export default function SubcomponentGrid({ componentId, componentQuantity }: Props) {
   const queryClient = useQueryClient();
@@ -61,21 +66,39 @@ export default function SubcomponentGrid({ componentId, componentQuantity }: Pro
   const { data, error: queryError } = useQuery({
     queryKey: ["subcomponents", componentId],
     queryFn: () => getSubcomponentsByComponentId(componentId),
+    enabled: !!componentId, // هذا مهم جدًا
   });
 
-  useEffect(() => {
-    if (data) {
-      try {
-        const sanitizedData = data.map((item) => sanitizeSubcomponent(item));
-        setRows(sanitizedData);
-        setError(null);
-      } catch (err) {
-        console.error("Error sanitizing data:", err);
-        setError("Error loading subcomponents data");
-      }
+ // عند تحميل الداتا
+useEffect(() => {
+  if (data) {
+    try {
+      const sanitizedData = data.map((item) => {
+        const sanitized = sanitizeSubcomponent(item);
+        sanitized.totalQuantity = sanitized.count * componentQuantity; 
+        return sanitized;
+      });
+      setRows(sanitizedData);
+      setError(null);
+    } catch (err) {
+      console.error("Error sanitizing data:", err);
+      setError("Error loading subcomponents data");
     }
-  }, [data]);
+  }
+}, [data, componentQuantity]);
 
+// عند تغير كمية الـ Component
+useEffect(() => {
+  setRows((prevRows) =>
+    prevRows.map((row) => ({
+      ...row,
+      totalQuantity: row.count * componentQuantity,
+    }))
+  );
+}, [componentQuantity]);
+
+
+  
   // Handle query errors
   useEffect(() => {
     if (queryError) {
@@ -104,80 +127,94 @@ export default function SubcomponentGrid({ componentId, componentQuantity }: Pro
       queryClient.invalidateQueries({ queryKey: ["subcomponents", componentId] }),
   });
 
-  const handleChange = (
-    index: number,
-    field: keyof Subcomponent | string,
-    value: any
-  ) => {
-    const updated = [...rows];
-    const row = { ...updated[index] };
+// Fix the handleChange function to properly calculate totalQuantity
+const handleChange = (
+  index: number,
+  field: keyof Subcomponent | string,
+  value: any
+) => {
+  const updated = [...rows];
+  const row = { ...updated[index] };
 
-    if (field.includes(".")) {
-      const [parent, child] = field.split(".");
-      row[parent] = {
-        ...row[parent],
-        [child]: parseFloat(value) || 0,
-      };
+  if (field.includes(".")) {
+    const [parent, child] = field.split(".");
+    row[parent] = {
+      ...row[parent],
+      [child]: parseFloat(value) || 0,
+    };
+  } else {
+    if (field === "count") {
+      const count = parseInt(value) || 0;
+      row.count = count;
+      row.totalQuantity = count * componentQuantity; // Ensure this calculation happens
     } else {
-      if (field === "count") {
-        row.count = parseInt(value) || 0;
-        row.totalQuantity = row.count * componentQuantity;
-      } else {
-        (row[field as keyof Subcomponent] as any) = value ?? "";
-      }
+      (row[field as keyof Subcomponent] as any) = value ?? "";
     }
+  }
 
-    updated[index] = row;
-    setRows(updated);
-  };
-  const mapToDto = (row: Subcomponent): any => ({
-    id: row.id,
-    componentId: row.componentId,
-    name: row.name,
-    material: row.material,
-    notes: row.notes,
-    count: row.count,
-    totalQuantity: row.totalQuantity,
-    veneerInner: row.veneerInner,
-    veneerOuter: row.veneerOuter,
-    detailSize: row.detailSize,
-    cuttingSize: row.cuttingSize,
-    finalSize: row.finalSize,
-  });
+  updated[index] = row;
+  setRows(updated);
+};
+const mapToDto = (row: Subcomponent): any => ({
+  id: row.id,
+  componentId: row.componentId,
+  name: row.name,
+  material: row.material,
+  notes: row.notes,
+  count: row.count,
+  totalQuantity: row.totalQuantity,
+  veneerInner: row.veneerInner,
+  veneerOuter: row.veneerOuter,
+
+  // detailSize fields
+  detailLength: row.detailSize.length,
+  detailWidth: row.detailSize.width,
+  detailThickness: row.detailSize.thickness,
+
+  // cuttingSize fields
+  cuttingLength: row.cuttingSize.length,
+  cuttingWidth: row.cuttingSize.width,
+  cuttingThickness: row.cuttingSize.thickness,
+
+  // finalSize fields
+  finalLength: row.finalSize.length,
+  finalWidth: row.finalSize.width,
+  finalThickness: row.finalSize.thickness,
+});
+
+
   
-const handleBlur = async (row: Subcomponent) => {
-  if (!row.name || !row.material) return;
+// Enhance the handleBlur function with better error handling
+const handleBlur = async (row: Subcomponent, index: number) => {
+  if (!row.name || !row.material) {
+    setError("الاسم والخامة مطلوبان");
+    return;
+  }
 
   try {
     if (row.id > 0) {
-      // Update existing subcomponent
-      const dto = mapToDto(row);
-      console.log("Updating row:", dto);
-      await mutationUpdate.mutateAsync(dto);
+      // تحديث مكون موجود
+      await mutationUpdate.mutateAsync(mapToDto(row));
     } else {
-      // Create new subcomponent - exclude id field
+      // إنشاء مكون جديد
       const { id, ...createDto } = mapToDto(row);
-      console.log("Creating row:", createDto);
       const result = await mutationCreate.mutateAsync(createDto);
-      console.log("Created result:", result);
-      
-      // Sanitize the result before updating state
-      const sanitizedResult = sanitizeSubcomponent(result);
-      
-      // Replace the temporary row with the created row from server
-      setRows((prev) => prev.map(r => r === row ? sanitizedResult : r));
+
+      // تحديث الـ state باستخدام الفهرس بدل المقارنة بين الكائنات
+      setRows(prev => {
+        const updated = [...prev];
+        updated[index] = sanitizeSubcomponent(result); // تأكد أن الدالة ترجع كائن متكامل
+        return updated;
+      });
     }
+
+    setError(null); // إزالة رسالة الخطأ بعد النجاح
   } catch (error) {
-    console.error("Failed to save subcomponent:", error);
-    console.error("Error details:", {
-      row,
-      componentId,
-      componentQuantity
-    });
-    // You can add user notification here
+    console.error("Error saving subcomponent:", error);
+    setError("فشل حفظ البيانات. يرجى المحاولة مرة أخرى");
   }
 };
-  
+
 
   const handleAdd = () => {
     if (rows.some((r) => r.id === 0)) return;
@@ -354,8 +391,8 @@ const handleBlur = async (row: Subcomponent) => {
                     variant="contained"
                     color="success"
                     startIcon={<Add />}
-                    onClick={() => handleBlur(row)}
-                  >
+                    onClick={() => handleBlur(row, index)}
+                    >
                     حفظ
                   </Button>
                 </TableCell>
@@ -368,7 +405,7 @@ const handleBlur = async (row: Subcomponent) => {
                     <TextField
                       value={row.name}
                       onChange={(e) => handleChange(index, "name", e.target.value)}
-                      onBlur={() => handleBlur(row)}
+                      onBlur={() => handleBlur(row, index)}
                       variant="standard"
                       fullWidth
                     />
@@ -378,7 +415,7 @@ const handleBlur = async (row: Subcomponent) => {
                     <TextField
                       value={row.material}
                       onChange={(e) => handleChange(index, "material", e.target.value)}
-                      onBlur={() => handleBlur(row)}
+                      onBlur={() => handleBlur(row, index)}
                       variant="standard"
                       fullWidth
                     />
@@ -389,7 +426,7 @@ const handleBlur = async (row: Subcomponent) => {
                       type="number"
                       value={row.count ?? 0}
                       onChange={(e) => handleChange(index, "count", e.target.value)}
-                      onBlur={() => handleBlur(row)}
+                      onBlur={() => handleBlur(row, index)}
                       variant="standard"
                       fullWidth
                     />
@@ -401,7 +438,7 @@ const handleBlur = async (row: Subcomponent) => {
                     <TextField
                       value={row.notes ?? ""}
                       onChange={(e) => handleChange(index, "notes", e.target.value)}
-                      onBlur={() => handleBlur(row)}
+                      onBlur={() => handleBlur(row, index)}
                       variant="standard"
                       fullWidth
                     />
@@ -411,7 +448,7 @@ const handleBlur = async (row: Subcomponent) => {
                     <TextField
                       value={row.veneerInner ?? ""}
                       onChange={(e) => handleChange(index, "veneerInner", e.target.value)}
-                      onBlur={() => handleBlur(row)}
+                      onBlur={() => handleBlur(row, index)}
                       variant="standard"
                       fullWidth
                     />
@@ -421,7 +458,7 @@ const handleBlur = async (row: Subcomponent) => {
                     <TextField
                       value={row.veneerOuter ?? ""}
                       onChange={(e) => handleChange(index, "veneerOuter", e.target.value)}
-                      onBlur={() => handleBlur(row)}
+                      onBlur={() =>handleBlur(row, index)}
                       variant="standard"
                       fullWidth
                     />
@@ -434,7 +471,7 @@ const handleBlur = async (row: Subcomponent) => {
                         variant="standard"
                         value={row.detailSize?.[dim] ?? 0}
                         onChange={(e) => handleChange(index, `detailSize.${dim}`, e.target.value)}
-                        onBlur={() => handleBlur(row)}
+                        onBlur={() => handleBlur(row, index)}
                         fullWidth
                       />
                     </TableCell>
@@ -447,7 +484,7 @@ const handleBlur = async (row: Subcomponent) => {
                         variant="standard"
                         value={row.cuttingSize?.[dim] ?? 0}
                         onChange={(e) => handleChange(index, `cuttingSize.${dim}`, e.target.value)}
-                        onBlur={() => handleBlur(row)}
+                        onBlur={() =>handleBlur(row, index)}
                         fullWidth
                       />
                     </TableCell>
@@ -460,7 +497,7 @@ const handleBlur = async (row: Subcomponent) => {
                         variant="standard"
                         value={row.finalSize?.[dim] ?? 0}
                         onChange={(e) => handleChange(index, `finalSize.${dim}`, e.target.value)}
-                        onBlur={() => handleBlur(row)}
+                        onBlur={() => handleBlur(row, index)}
                         fullWidth
                       />
                     </TableCell>

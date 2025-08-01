@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Collapse,
   IconButton,
   Table,
   TableBody,
@@ -14,7 +13,7 @@ import {
   Typography,
   Paper,
 } from "@mui/material";
-import { Add, Delete, KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
+import { Add, Delete } from "@mui/icons-material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getComponentsByProductId,
@@ -27,24 +26,41 @@ import { Component as ProductComponent } from "../types/Component";
 import SubcomponentGrid from "./SubcomponentGrid";
 
 type Props = {
-  product: Product;
-};
-
-export default function ComponentGrid({ product }: Props) {
+    product: Product;
+    selectedComponentId: number | null;
+    onSelectComponent: (id: number | null) => void;
+  };
+  
+  
+  export default function ComponentGrid({
+    product,
+    selectedComponentId,
+    onSelectComponent,
+  }: Props) {
   const queryClient = useQueryClient();
   const [rows, setRows] = useState<ProductComponent[]>([]);
-  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+//   const [selectedComponentId, setSelectedComponentId] = useState<number | null>(null;)
+  
 
-  const { data } = useQuery({
+  const { data, error: queryError } = useQuery({
     queryKey: ["components", product.id],
     queryFn: () => getComponentsByProductId(product.id),
     enabled: !!product?.id,
   });
 
   useEffect(() => {
-    if (data) setRows(data);
+    if (data) {
+      setRows(data);
+      setError(null);
+    }
   }, [data]);
+
+  useEffect(() => {
+    if (queryError) {
+      setError("فشل تحميل المكونات");
+    }
+  }, [queryError]);
 
   const mutationUpdate = useMutation({
     mutationFn: updateComponent,
@@ -86,7 +102,7 @@ export default function ComponentGrid({ product }: Props) {
       } else {
         const { id, ...newRow } = row;
         const result = await mutationCreate.mutateAsync({ ...newRow, productId: product.id });
-        setRows(prev => {
+        setRows((prev) => {
           const updated = [...prev];
           updated[index] = result;
           return updated;
@@ -94,7 +110,8 @@ export default function ComponentGrid({ product }: Props) {
       }
       setError(null);
     } catch (err) {
-      setError("فشل حفظ المكون");
+      console.error("Error:", err);
+      setError("حدث خطأ أثناء الحفظ");
     }
   };
 
@@ -113,21 +130,29 @@ export default function ComponentGrid({ product }: Props) {
 
   const handleDelete = (id: number) => {
     mutationDelete.mutate(id);
-  };
-
-  const toggleExpand = (id: number) => {
-    setExpandedRowId((prev) => (prev === id ? null : id));
+    if (selectedComponentId === id) {
+        onSelectComponent(null);
+    }
   };
 
   return (
     <Box mt={3}>
       <Typography variant="h6" gutterBottom>
-        مكونات المنتج: {product.name}
+        المكونات الخاصة بالمنتج: {product.name}
       </Typography>
 
-      {error && <Typography color="error">{error}</Typography>}
+      {error && (
+        <Typography color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
 
-      <Button variant="contained" color="primary" startIcon={<Add />} onClick={handleAdd}>
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<Add />}
+        onClick={handleAdd}
+      >
         إضافة مكون
       </Button>
 
@@ -135,71 +160,71 @@ export default function ComponentGrid({ product }: Props) {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell />
               <TableCell>الاسم</TableCell>
               <TableCell>الكمية</TableCell>
+              <TableCell>تحديد</TableCell>
               <TableCell>حذف</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map((row, index) => (
-              <React.Fragment key={row.id || `new-${index}`}>
-                <TableRow>
-                  <TableCell>
-                    {row.id > 0 && (
-                      <IconButton size="small" onClick={() => toggleExpand(row.id)}>
-                        {expandedRowId === row.id ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-                      </IconButton>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      value={row.name}
-                      onChange={(e) => handleChange(index, "name", e.target.value)}
-                      onBlur={() => handleBlur(row, index)}
-                      variant="standard"
-                      fullWidth
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      type="number"
-                      value={row.quantity}
-                      onChange={(e) => handleChange(index, "quantity", e.target.value)}
-                      onBlur={() => handleBlur(row, index)}
-                      variant="standard"
-                      fullWidth
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {row.id > 0 && (
-                      <IconButton onClick={() => handleDelete(row.id)}>
-                        <Delete color="error" />
-                      </IconButton>
-                    )}
-                  </TableCell>
-                </TableRow>
+              <TableRow
+                key={row.id || `new-${index}`}
+                selected={selectedComponentId === row.id}
+                sx={{ backgroundColor: selectedComponentId === row.id ? "#f9f9f9" : "inherit" }}
+              >
+                <TableCell>
+                  <TextField
+                    value={row.name}
+                    onChange={(e) => handleChange(index, "name", e.target.value)}
+                    onBlur={() => handleBlur(row, index)}
+                    variant="standard"
+                    fullWidth
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    type="number"
+                    value={row.quantity}
+                    onChange={(e) => handleChange(index, "quantity", e.target.value)}
+                    onBlur={() => handleBlur(row, index)}
+                    variant="standard"
+                    fullWidth
+                  />
+                </TableCell>
+                <TableCell>
+                <Button
+                variant="outlined"
+                color={selectedComponentId === row.id ? "success" : "primary"}
+                onClick={() =>
+                    onSelectComponent(selectedComponentId === row.id ? null : row.id)
+                }
+                >
+                {selectedComponentId === row.id ? "محدد" : "تحديد"}
+                </Button>
 
-                {/* الصف الإضافي لعرض SubcomponentGrid */}
-                {row.id > 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} sx={{ p: 0 }}>
-                      <Collapse in={expandedRowId === row.id} timeout="auto" unmountOnExit>
-                        <Box sx={{ m: 2 }}>
-                          <SubcomponentGrid
-                            componentId={row.id}
-                            componentQuantity={row.quantity}
-                          />
-                        </Box>
-                      </Collapse>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </React.Fragment>
+                </TableCell>
+                <TableCell>
+                  <IconButton onClick={() => handleDelete(row.id)}>
+                    <Delete color="error" />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+
+      {selectedComponentId && (
+        <Box mt={3}>
+            <SubcomponentGrid
+            componentId={selectedComponentId}
+            componentQuantity={rows.find((c) => c.id === selectedComponentId)?.quantity || 0}
+            />
+        </Box>
+        )}
+
+
     </Box>
   );
 }
